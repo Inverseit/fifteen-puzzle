@@ -7,6 +7,26 @@ screen = pygame.display.set_mode(size)
 pygame.display.set_caption("15 puzzle")
 ### https://www.101computing.net/getting-started-with-pygame/
 
+class Board:
+    def __init__(self, size):
+        self.grid = []
+        self.generateBoard(size)
+    def __repr__(self):
+        for i in self.grid:
+            for j in i:
+                print(j, end=" ")
+            print()
+        return ""
+    def generateBoard(self, size):
+        for i in range(size):
+            row  = [str(j) for j in range(i*size+1, (i+1)*size+1)]
+            if i == size -1:
+                row.pop(-1)
+                row.append("__")
+            self.grid.append(row)
+four = Board(4)
+print(four)
+
 # Define some colors
 BLACK = ( 0, 0, 0)
 WHITE = ( 255, 255, 255)
