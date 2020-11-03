@@ -18,20 +18,6 @@ class GameLogic():
         board[-1][-1] = 0  # make the last element 0 (empty)
         return board
     
-    def __repr__(self):
-        out = ""
-        for i in self.board:
-            for j in i:
-                l = len(str(j))
-                if j == 0:
-                    p = "__"
-                else:
-                    p = " "+ str(j) if l == 1 else str(j)
-                out += p + " "
-            out += "\n"
-        print(out, end = "\r")
-        return ""
-        
     def getBoard(self):
         return self.board
 
@@ -73,8 +59,7 @@ class GameLogic():
         for _ in range(3):
             seed += ["L"]
         return seed
-        
-        
+    
     # make move by some direction
     def moveDirection(self, direction):
         vector = {"U": (1, 0), "D": (-1, 0), 
@@ -103,27 +88,6 @@ class GameLogic():
         self.board[x1][y1] = self.board[x2][y2]
         self.board[x2][y2] = 0
         self.empty = (x2,y2)
-
-    def on_press(self, key):
-        if key == keyboard.Key.left:
-            self.moveDirection("L")
-        elif key == keyboard.Key.right:
-            self.moveDirection("R")
-        elif key == keyboard.Key.down:
-            self.moveDirection("D")
-        elif key == keyboard.Key.up:
-            self.moveDirection("U")
-        os.system('cls||clear')
-        print(self)
-
-    def on_release(self, key):
-        # released
-        if key == keyboard.Key.esc:
-            # Stop listener
-            return False
-    def startListening(self):
-        with keyboard.Listener(on_press=self.on_press, on_release=self.on_release) as listener:
-            listener.join()  # Join the listener thread to the main thread to keep waiting for keys
     
     @staticmethod
     def addTuples(t1, t2):
