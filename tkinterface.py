@@ -2,6 +2,7 @@ import tkinter as tk
 import time
 import math
 import copy
+import os
 from PIL import ImageTk, Image
 from gamelogic import GameLogic
 from tile import Tile
@@ -14,7 +15,7 @@ NUMBERS  = 1
 class App(object):
     def __init__(self, master, **kwargs):
         self.master = master
-        self.type = NUMBERS
+        self.type = NUMBERS+2
         self.w = 500
         self.canvas = tk.Canvas(self.master, width=self.w, height=self.w)
         self.canvas.pack()
@@ -23,19 +24,51 @@ class App(object):
         self.size = self.w // self.n
         self.seed = []
         self.gameOver = False
-        self.textures = self.loadTextures()
+        self.textures = self.loadTextures("textures/tartan.jpg")
         self.bind()  # bind mouse and keys to the tkinter
         self.master.after(0, self.draw)
         self.onShuflle = True
         self.shuffleBoard()
 
-    def loadTextures(self):
+    def crop(self, infile):
+        im = Image.open(infile)
+        width, height = im.size
+        imgwidth = self.w
+        imgheight = imgwidth * height // width
+        im = im.resize((imgwidth, imgheight), Image.ANTIALIAS)
+        cropped = []
+        for i in range(self.n):
+            for j in range(self.n):
+                box = (j*self.size, i*self.size, (j+1)
+                       * self.size, (i+1)*self.size)
+                piece =  im.crop(box)
+                img = Image.new('RGB', (self.size, self.size), 255)
+                img.paste(piece)
+                # path = os.path.join('tmp/IMG-%s.jpg' % k)
+                # k += 1
+                # img.save(path)
+                cropped.append(img)
+        return cropped
+
+    def loadTextures(self, infile):
         if self.type == NUMBERS:
             im = Image.open("textures/wood.jpg")
             im = im.resize(
                 (self.size-2, self.size-2))
             ph = ImageTk.PhotoImage(im)
-            return ph
+            number = self.n * self.n
+            return [ph] * number
+        else:
+            textures = [0]
+            pieces = self.crop(infile)
+            for i in range(1, self.n*self.n):
+                # im = Image.open("tmp/IMG-%s.jpg" %i)
+                im = pieces[i-1]
+                im = im.resize(
+                    (self.size-2, self.size-2))
+                ph = ImageTk.PhotoImage(im)
+                textures.append(ph)
+            return textures
 
     def bind(self):
         self.master.bind("<Right>", self.arrowKey)
@@ -46,7 +79,7 @@ class App(object):
         self.canvas.bind("<Button-1>", self.mouse)
 
     def shuffleBoard(self):
-        self.seed = self.model.getSeed()
+        self.seed = self.model.getShuffleSeed()
         self.shuffleAnimaion()
 
     def shuffleAnimaion(self):
@@ -59,11 +92,14 @@ class App(object):
         self.master.after(10, self.shuffleAnimaion)
 
     def draw(self):
-        self.tiles = self.getTiles(self.n)
-        self.drawTiles()
-        if self.model.isGameOver() and not self.onShuflle:
-            print("GAMEEEEEEEEEEEEE OVERRRRRRRRRRRRRRRRRRR")
-            self.gameOver = True
+        if self.gameOver:
+            print("no need to continue")
+        else:
+            self.tiles = self.getTiles(self.n)
+            self.drawTiles()
+            if self.model.isGameOver() and not self.onShuflle:
+                print("GAMEEEEEEEEEEEEE OVERRRRRRRRRRRRRRRRRRR")
+                self.gameOver = True
     
     def key(self, event):
         c = event.char.upper()
@@ -99,9 +135,7 @@ class App(object):
 
     def getTiles(self, n):
         board = self.model.getBoard()
-        # tiles = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
-        tiles = copy.deepcopy(board)
-        # tiles1 = [[0]*self.n] * self.n
+        tiles = copy.deepcopy(board)    # copying to have exact same dimensions
 
         for i in range(len(board)):
             for j in range(len(board[i])):

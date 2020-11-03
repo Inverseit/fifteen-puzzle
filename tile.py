@@ -41,7 +41,7 @@ class Tile(object):
         return self.canvas.create_polygon(points,outline='black', fill='', width = 2, smooth=True)
 
     def display(self):
-        if self.boardType == NUMBERS:
+        if True:
             if self.number == 0:
                 return
             size = self.size
@@ -54,7 +54,8 @@ class Tile(object):
             # self.image = ImageTk.PhotoImage(im)
             # print(self.image)
             self.canvas.create_image(
-                x+self.margin, y+self.margin, image=self.textures, anchor='nw')
-            self.id = self.round_rect(
-                x, y, x+size, y+size)
-            self.label = self.canvas.create_text(x+size/2, y+size/2, text=number, font="Times 20 italic bold")
+                x+self.margin, y+self.margin, image=self.textures[number], anchor='nw')
+            if self.boardType == NUMBERS:
+                self.id = self.round_rect(
+                    x, y, x+size, y+size)
+                self.label = self.canvas.create_text(x+size/2, y+size/2, text=number, font="Times 30 italic bold")

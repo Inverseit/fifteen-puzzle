@@ -15,7 +15,7 @@ class GameLogic():
         board = []
         sz = self.n
         board = [[j for j in range(i*sz+1, (i+1)*sz+1)] for i in range(sz)]
-        board[-1][-1] = 0
+        board[-1][-1] = 0  # make the last element 0 (empty)
         return board
     
     def __repr__(self):
@@ -34,6 +34,7 @@ class GameLogic():
         
     def getBoard(self):
         return self.board
+
     def shuffleBoard(self):
         # board = self.board
         l = 500
@@ -52,7 +53,8 @@ class GameLogic():
             self.moveDirection("U")
         for _ in range(3):
             self.moveDirection("L")
-    def getSeed(self):
+
+    def getShuffleSeed(self):
         l = 40
         seed = []
         moves = ["U", "R", "L", "D"]
