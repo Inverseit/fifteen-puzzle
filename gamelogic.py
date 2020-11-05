@@ -11,6 +11,20 @@ class GameLogic():
     def isGameOver(self):
         return self.board == self.goal
 
+    def __repr__(self):
+        out = ""
+        for i in self.board:
+            for j in i:
+                l = len(str(j))
+                if j == 0:
+                    p = "__"
+                else:
+                    p = " " + str(j) if l == 1 else str(j)
+                out += p + " "
+            out += "\n"
+        print(out, end="\r")
+        return ""
+
     def getInitBoard(self):
         board = []
         sz = self.n
@@ -23,7 +37,7 @@ class GameLogic():
 
     def shuffleBoard(self):
         # board = self.board
-        l = 500
+        l = 50
         moves = ["U", "R", "L", "D"]
         cur = random.randint(0, 3)
         for i in range(l):
@@ -41,7 +55,7 @@ class GameLogic():
             self.moveDirection("L")
 
     def getShuffleSeed(self):
-        l = 40
+        l = 50
         seed = []
         moves = ["U", "R", "L", "D"]
         cur = random.randint(0, 3)
@@ -98,5 +112,5 @@ if __name__ == "__main__":
     a = GameLogic(4)
     a.shuffleBoard()
     print(a)
-    a.startListening()
-    print(a)
+    # a.startListening()
+    # print(a)
