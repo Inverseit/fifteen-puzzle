@@ -13,7 +13,6 @@ class Positions(object):
         self.board = board
         self.empty = empty
         self.path = path
-
         self.getHashString(self.board)
         self.calculateCost()
 
@@ -87,8 +86,7 @@ class Positions(object):
 
 
     @staticmethod
-    def addTuples(t1, t2):
-        # adds tuples componentwise
+    def addTuples(t1, t2): # adds tuples componentwise
         return tuple(map(lambda i, j: i + j, t1, t2))
 
 
@@ -97,7 +95,6 @@ class Solver():
         self.n = n
         self.start = time.time()
         self.g = g
-        self.g.shuffleBoard()
         self.board = g.getBoard()
         self.empty = (n-1, n-1)
         self.queue = PriorityQueue()
@@ -139,5 +136,7 @@ class Solver():
 
 if __name__ == "__main__":
     g = GameLogic(4)
+    g.shuffleBoard()
+    print(g)
     soln = Solver(g, 4).getSolution()
     print(soln)

@@ -3,7 +3,7 @@ import time
 import math
 import copy
 import os
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageEnhance
 from gamelogic import GameLogic
 from tile import Tile
 
@@ -15,11 +15,18 @@ NUMBERS  = 1
 class App(object):
     def __init__(self, master, **kwargs):
         self.master = master
-        self.type = NUMBERS+2
+        self.type = NUMBERS
         self.w = 500
-        self.canvas = tk.Canvas(self.master, width=self.w, height=self.w)
+        self.h =  self.w+100
+        self.canvas = tk.Canvas(self.master, width=self.w, height=self.h)
+        self.icons = {}
+        self.openImages()
+        self.setImages()
+        self.on = False
+        self.canvas.bind("<Motion>", self.moved)
         self.canvas.pack()
-        self.n = 4
+        # self.setButton()
+        self.n = 3
         self.model = GameLogic(self.n)
         self.size = self.w // self.n
         self.seed = []
@@ -29,6 +36,43 @@ class App(object):
         self.master.after(0, self.draw)
         self.onShuflle = True
         self.shuffleBoard()
+
+    def openImages(self):
+        im = Image.open("textures/bg/gyr.jpg")
+        self.bg = ImageTk.PhotoImage(im)
+        self.iconList = ["home", "pause", "restart", "bot"]
+        for iconName in self.iconList:
+            icon = Image.open("textures/icons/"+iconName+".png").convert("RGBA")
+            self.icons[iconName] = {}
+            self.icons[iconName]["on"] = ImageTk.PhotoImage(icon)
+            self.icons[iconName]["off"] = ImageTk.PhotoImage(
+                self.reduce_opacity(icon, 0.5))
+            self.icons[iconName]["state"] = False
+        # bot = Image.open("textures/icons/bot2.png")
+        # self.icons["bot"]["on"] = ImageTk.PhotoImage(bot)
+        # pause = Image.open("textures/icons/pause.png")
+        # self.icons["pause"]["on"] = ImageTk.PhotoImage(pause)
+        # play = Image.open("textures/icons/play.png")
+        # self.icons["play"]["on"] = ImageTk.PhotoImage(play)
+        # restart = Image.open("textures/icons/restart.png")
+        # self.icons["restart"]["on"] = ImageTk.PhotoImage(restart)
+
+    def setBG(self):
+        self.canvas.create_image(0, 0, image=self.bg, anchor='nw')
+
+    def setImages(self):
+        begin = 40
+        margin = 120
+        height = 510
+        self.icons["home"]["tag"] = self.canvas.create_image(begin, height, image=self.icons["home"]["off"], anchor = "nw")
+        self.icons["restart"]["tag"] = self.canvas.create_image(
+            begin + margin, height, image=self.icons["restart"]["off"], anchor="nw")
+        self.icons["pause"]["tag"] = self.canvas.create_image(
+            begin + 2*margin, height, image=self.icons["pause"]["off"], anchor="nw")
+        self.icons["bot"]["tag"] = self.canvas.create_image(
+            begin+3*margin, height, image=self.icons["bot"]["off"], anchor="nw")
+
+
 
     def crop(self, infile):
         im = Image.open(infile)
@@ -50,11 +94,30 @@ class App(object):
                 cropped.append(img)
         return cropped
 
+
+    @staticmethod
+    def reduce_opacity(im, opacity):
+        """Returns an image with reduced opacity."""
+        # from https://stackoverflow.com/questions/61271072/how-can-i-solve-python-3-pil-putalpha-problem
+        assert opacity >= 0 and opacity <= 1
+        if im.mode != 'RGBA':
+            im = im.convert('RGBA')
+        else:
+            im = im.copy()
+        alpha = im.split()[3]
+        alpha = ImageEnhance.Brightness(alpha).enhance(opacity)
+        im.putalpha(alpha)
+        return im
+
+
     def loadTextures(self, infile):
         if self.type == NUMBERS:
-            im = Image.open("textures/wood.jpg")
-            im = im.resize(
-                (self.size-2, self.size-2))
+            # im = Image.open("textures/gray.jpg")
+            alpha = int(0.5 * 255)
+            fill = "#BBBCB6"
+            fill = self.master.winfo_rgb(fill) + (alpha,)
+            im = Image.new('RGBA', (self.size-2, self.size-2), fill)
+            # im = im.putalpha(128)
             ph = ImageTk.PhotoImage(im)
             number = self.n * self.n
             return [ph] * number
@@ -62,7 +125,6 @@ class App(object):
             textures = [0]
             pieces = self.crop(infile)
             for i in range(1, self.n*self.n):
-                # im = Image.open("tmp/IMG-%s.jpg" %i)
                 im = pieces[i-1]
                 im = im.resize(
                     (self.size-2, self.size-2))
@@ -127,11 +189,21 @@ class App(object):
         self.master.after(0, self.draw)
 
     def mouse(self, event):
+        this = self.canvas.find_withtag(tk.CURRENT)
+        foundButton = [name for name in self.iconList if self.icons[name]
+                 ["tag"] == this[0]]
+        if foundButton:
+            self.buttonClick(foundButton[0])
+            return
         # transposing when getting point
-        y, x = self.getPos(event.x), self.getPos(event.y)
+        y = self.getPos(event.x)
+        x = self.getPos(event.y) if event.y < self.w else -1
+        if x < 0:
+            return
         if not self.onShuflle and  (x, y != self.model.empty):
             self.model.moveByBlock(x, y)
             self.master.after(0, self.draw)
+
 
     def getTiles(self, n):
         board = self.model.getBoard()
@@ -144,14 +216,31 @@ class App(object):
                 tiles[i][j] = newTile
         return tiles
 
+
     def drawTiles(self):
         self.canvas.delete("all")
+        self.setBG()
+        self.setImages()
         for row in self.tiles:
             for tile in row:
                 tile.display()
 
+    def moved(self,event):
+        this = self.canvas.find_withtag(tk.CURRENT)
+        found = [name for name in self.iconList if self.icons[name]["tag"] == this[0]]
+        if found:
+            name = found[0]
+            self.icons[name]["state"] = True
+            self.canvas.itemconfig(
+                self.icons[name]["tag"], image=self.icons[name]["on"])
+        else:
+            for name in self.iconList:
+                if self.icons[name]["state"]:
+                    self.canvas.itemconfig(self.icons[name]["tag"], image=self.icons[name]["off"])
+                    self.on = False
 
-
+    def buttonClick(self, name):
+        print(name)
 
 root = tk.Tk()
 app = App(root)

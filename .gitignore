@@ -131,3 +131,5 @@ dmypy.json
 .pyre/
 .vscode/settings.json
 solver.py
+t.html
+textures/gray.jpg
