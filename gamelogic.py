@@ -37,7 +37,7 @@ class GameLogic():
 
     def shuffleBoard(self):
         # board = self.board
-        l = 50
+        l = 20
         moves = ["U", "R", "L", "D"]
         cur = random.randint(0, 3)
         for i in range(l):
@@ -81,6 +81,10 @@ class GameLogic():
         new = self.addTuples(self.empty, vector[direction])
         if 0 <= new[0] < self.n and 0 <= new[1] < self.n:
             self.swap(*self.empty, *new)
+    
+    def reInit(self):
+        self.board = self.getInitBoard()
+        self.empty = (self.n-1, self.n-1)
 
     def moveByBlock(self,x, y):
         if (x > 0 and self.empty == (x - 1,y)):

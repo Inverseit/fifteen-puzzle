@@ -2,8 +2,6 @@ import time
 from queue import PriorityQueue
 from copy import deepcopy
 
-from gamelogic import GameLogic
-
 class Positions(object):
     def __init__(self, lvl, board, empty, path,n):
         self.n = n
@@ -102,6 +100,10 @@ class Solver():
 
     def getSolution(self):
         return self.solve()
+    
+    def tMove(self,move):
+        translation  = { "U": "D", "D": "U", "R": "L", "L": "R" }
+        return translation[move]
 
     def solve(self):
         root = Positions(0, self.board, self.empty, "", self.n)
@@ -126,7 +128,7 @@ class Solver():
 
             for newBoard, newEmpty, move in pos.possibleMoves():
                 newPos = Positions(pos.level+1, newBoard,
-                                newEmpty, pos.path + move, self.n)
+                                   newEmpty, pos.path + self.tMove(move), self.n)
                 if newPos not in self.visited:
                     self.visited.add(newPos)
                     self.queue.put(newPos)

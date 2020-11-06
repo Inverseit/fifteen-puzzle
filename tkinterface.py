@@ -5,6 +5,7 @@ import copy
 import os
 from PIL import ImageTk, Image, ImageEnhance
 from gamelogic import GameLogic
+from solve import Solver
 from tile import Tile
 
 
@@ -142,16 +143,16 @@ class App(object):
 
     def shuffleBoard(self):
         self.seed = self.model.getShuffleSeed()
-        self.shuffleAnimaion()
+        self.shuffleAnimaion(self.seed)
 
-    def shuffleAnimaion(self):
+    def shuffleAnimaion(self, seed):
         self.draw()
-        if not self.seed:
+        if not seed:
             self.onShuflle = False
             return
-        self.model.moveDirection(self.seed[0])
-        self.seed = self.seed[1:]
-        self.master.after(10, self.shuffleAnimaion)
+        self.model.moveDirection(seed[0])
+        seed = seed[1:]
+        self.master.after(50, lambda s =seed:self.shuffleAnimaion(s))
 
     def draw(self):
         if self.gameOver:
@@ -190,11 +191,12 @@ class App(object):
 
     def mouse(self, event):
         this = self.canvas.find_withtag(tk.CURRENT)
-        foundButton = [name for name in self.iconList if self.icons[name]
-                 ["tag"] == this[0]]
-        if foundButton:
-            self.buttonClick(foundButton[0])
-            return
+        if this:
+            foundButton = [name for name in self.iconList if self.icons[name]
+                    ["tag"] == this[0]]
+            if foundButton:
+                self.buttonClick(foundButton[0])
+                return
         # transposing when getting point
         y = self.getPos(event.x)
         x = self.getPos(event.y) if event.y < self.w else -1
@@ -227,20 +229,35 @@ class App(object):
 
     def moved(self,event):
         this = self.canvas.find_withtag(tk.CURRENT)
-        found = [name for name in self.iconList if self.icons[name]["tag"] == this[0]]
-        if found:
-            name = found[0]
-            self.icons[name]["state"] = True
-            self.canvas.itemconfig(
-                self.icons[name]["tag"], image=self.icons[name]["on"])
-        else:
-            for name in self.iconList:
-                if self.icons[name]["state"]:
-                    self.canvas.itemconfig(self.icons[name]["tag"], image=self.icons[name]["off"])
-                    self.on = False
+        if this:
+            found = [name for name in self.iconList if self.icons[name]["tag"] == this[0]]
+            if found:
+                name = found[0]
+                self.icons[name]["state"] = True
+                self.canvas.itemconfig(
+                    self.icons[name]["tag"], image=self.icons[name]["on"])
+            else:
+                for name in self.iconList:
+                    if self.icons[name]["state"]:
+                        self.canvas.itemconfig(self.icons[name]["tag"], image=self.icons[name]["off"])
+                        self.on = False
 
     def buttonClick(self, name):
-        print(name)
+        if name == "restart":
+            self.model.reInit()
+            self.gameOver = False
+            self.onShuflle = True
+            self.shuffleBoard()
+            return
+        if name == "bot":
+            s = Solver(self.model, self.n)
+            self.loading = True
+            solution = s.getSolution()
+            self.loading = False
+            self.shuffleAnimaion(solution)
+
+        
+
 
 root = tk.Tk()
 app = App(root)
