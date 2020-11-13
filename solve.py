@@ -113,11 +113,6 @@ class Solver():
         while not self.queue.empty():
             pos = self.queue.get()
 
-            if i % 5000 == 0:
-                print("checking " + str(i) + "th position, level is ",
-                    str(pos.level), "cost is ", str(pos.cost))
-            i += 1
-
             if pos.level > 70:
                 solution = "No under 70"
                 break
@@ -132,13 +127,23 @@ class Solver():
                 if newPos not in self.visited:
                     self.visited.add(newPos)
                     self.queue.put(newPos)
-        print(time.time() - self.start, solution)
-        return solution
+        # print(time.time() - self.start, solution)
+        return solution, time.time() - self.start
 
 
 if __name__ == "__main__":
-    g = GameLogic(4)
-    g.shuffleBoard()
-    print(g)
-    soln = Solver(g, 4).getSolution()
-    print(soln)
+    from gamelogic import GameLogic
+    f = open("data.csv", "a+")
+    for _ in range(1000):
+        g = GameLogic(4)
+        g.shuffleBoard()
+        board = g.getBoard()
+        out = ""
+        for i in range( len(board)):
+            for n in board[i]:
+                out += str(n) + ","
+        soln = Solver(g, 4).getSolution()
+        row = out +  str(len(soln)) + "\n"
+        print(row)
+        f.write(row)
+    f.close()
