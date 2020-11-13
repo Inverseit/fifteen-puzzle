@@ -28,6 +28,8 @@ share/python-wheels/
 MANIFEST
 tmp
 tmp/
+temp/
+menu.py
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
