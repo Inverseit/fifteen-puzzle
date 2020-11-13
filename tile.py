@@ -15,30 +15,6 @@ class Tile(object):
 
     def update(self, number):
         self.number = number
-    # from https://stackoverflow.com/questions/44099594/how-to-make-a-tkinter-canvas-rectangle-with-rounded-corners
-
-    def round_rect(self, x1, y1, x2, y2, radius=25):
-        points = [x1+radius, y1,
-                  x1+radius, y1,
-                  x2-radius, y1,
-                  x2-radius, y1,
-                  x2, y1,
-                  x2, y1+radius,
-                  x2, y1+radius,
-                  x2, y2-radius,
-                  x2, y2-radius,
-                  x2, y2,
-                  x2-radius, y2,
-                  x2-radius, y2,
-                  x1+radius, y2,
-                  x1+radius, y2,
-                  x1, y2,
-                  x1, y2-radius,
-                  x1, y2-radius,
-                  x1, y1+radius,
-                  x1, y1+radius,
-                  x1, y1]
-        return self.canvas.create_polygon(points,outline='black', fill='', width = 2, smooth=True)
 
     def display(self):
         if True:
@@ -56,6 +32,5 @@ class Tile(object):
             self.canvas.create_image(
                 x+self.margin, y+self.margin, image=self.textures[number], anchor='nw')
             if self.boardType == NUMBERS:
-                self.id = self.round_rect(
-                    x+self.margin, y+self.margin, x+size-self.margin, y+size-self.margin)
+                # self.id = self.round_rect(x+self.margin, y+self.margin, x+size-self.margin, y+size-self.margin)
                 self.label = self.canvas.create_text(x+size/2, y+size/2, text=number, font="Helvetica 50 bold")
