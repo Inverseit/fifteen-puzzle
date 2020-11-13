@@ -6,6 +6,7 @@ import copy
 import os
 from PIL import ImageTk, Image, ImageEnhance
 from gamelogic import GameLogic
+from timer import Timer
 from solve import Solver
 from tile import Tile
 
@@ -16,30 +17,41 @@ class App(object):
     def __init__(self, master, **kwargs):
         self.master = master
         self.type = NUMBERS
+        self.n = 4
         self.w = 500
         self.h = self.w+100
+        self.size = self.w // self.n
         self.canvas = tk.Canvas(self.master, width=self.w, height=self.h)
-        self.n = 4
-
-        self.icons = {}
-        self.openImages()
-        self.setImages()
         self.imagePath = "textures/tartan.jpg"
         # self.on = False
         self.canvas.bind("<Motion>", self.moved)
         self.canvas.pack()
         # self.setButton()
-        self.model = GameLogic(self.n)
-        self.size = self.w // self.n
-        self.seed = []
-        self.gameOver = False
-        self.bind()  # bind mouse and keys to the tkinter
-        self.master.after(0, self.draw)
+        
+        self.loadSources()
+        
+        # bind mouse and keys to the tkinter
+        self.bind()
+        self.started = False
         self.onMenu = True
         self.setUpMenu()
         self.showMenu()
-        self.onShuflle = True
+    
+    def loadSources(self):
+        self.icons = {}
+        self.openImages()
+        self.setImages()
+
+    def startGame(self):
+        self.started = True
+        self.model = GameLogic(self.n)
+        self.seed = []
+        self.gameOver = False
+        self.master.after(0, self.draw)
+        self.numberOfMoves = 0
+        self.onPause = True
         self.shuffleBoard()
+        self.t = Timer(self.master, self.canvas)        
 
     def openImages(self):
         im = Image.open("textures/bg/gyr.jpg")
@@ -143,7 +155,7 @@ class App(object):
     def shuffleAnimaion(self, seed):
         self.draw()
         if not seed:
-            self.onShuflle = False
+            self.onPause = False
             return
         self.model.moveDirection(seed[0])
         seed = seed[1:]
@@ -153,24 +165,35 @@ class App(object):
         if self.gameOver:
             print("no need to continue")
         elif self.onMenu:
-            pass
+            return
         else:
             self.tiles = self.getTiles(self.n)
             self.drawTiles()
-            if self.model.isGameOver() and not self.onShuflle:
-                print("GAMEEEEEEEEEEEEE OVERRRRRRRRRRRRRRRRRRR")
+            if self.model.isGameOver() and not self.onPause:
+                # print("GAMEEEEEEEEEEEEE OVERRRRRRRRRRRRRRRRRRR")
                 self.gameOver = True
+                self.t.stop()
+            # print(self.numberOfMoves)
     
     def key(self, event):
         c = event.char.upper()
         if c in ["W", "A", "S", "D"]:
             dirs = {"A": "L", "S": "D", "W":"U" ,"D":"R"}
-            self.drawMoveDirection(dirs[c])
+            if self.drawMoveDirection(dirs[c]):
+                # run timer only after first move
+                if self.numberOfMoves == 0:
+                    print("run")
+                    self.t.run()
+                self.numberOfMoves += 1
 
     def arrowKey(self, event):
         d = event.keysym[0]
         if d in ["U", "D", "L", "R"]:
-            self.drawMoveDirection(d)
+            if self.drawMoveDirection(d):
+                if self.numberOfMoves == 0:
+                    print("run")
+                    self.t.run()
+                self.numberOfMoves += 1
     
     def getPos(self, x):
         pos = math.floor(x / self.size)
@@ -181,14 +204,16 @@ class App(object):
         return pos
         
     def drawMoveDirection(self, direction):
-        if self.onShuflle:
+        if self.onPause:
             return
-        self.model.moveDirection(direction)
+        res = self.model.moveDirection(direction)
         self.master.after(0, self.draw)
+        return res
 
     def mouse(self, event):
         # Mouse click handler general
         if self.onMenu:
+            print("lol")
             self.menuClick(event)
             return
         else:
@@ -203,8 +228,11 @@ class App(object):
         x = self.getPos(event.y) if event.y < self.w else -1
         if x < 0:
             return
-        if not self.onShuflle and  (x, y != self.model.empty):
-            self.model.moveByBlock(x, y)
+        if not self.onPause and  (x, y != self.model.empty):
+            if self.model.moveByBlock(x, y):
+                if self.numberOfMoves == 0:
+                    self.t.run()
+                self.numberOfMoves += 1 
             self.master.after(0, self.draw)
 
 
@@ -230,6 +258,8 @@ class App(object):
 
     def moved(self,event):
         # Event hover handler on mouse move
+        if self.onMenu:
+            return
         this = self.canvas.find_withtag(tk.CURRENT)
         if this:
             found = [name for name in self.iconList if self.icons[name]["tag"] == this[0]]
@@ -248,7 +278,7 @@ class App(object):
         if name == "restart":
             self.model.reInit()
             self.gameOver = False
-            self.onShuflle = True
+            self.onPause = True
             self.shuffleBoard()
             return
         if name == "bot":
@@ -262,7 +292,8 @@ class App(object):
             self.onMenu = True
             self.showMenu()
         if name == "pause":
-            pass
+            self.onPause = True
+            self.t.stop()
 
     # from https://stackoverflow.com/questions/44099594/how-to-make-a-tkinter-canvas-rectangle-with-rounded-corners
     def round_rect(self, x1, y1, x2, y2, fill = "red", radius=25, **kw):
@@ -305,7 +336,6 @@ class App(object):
         self.menu["img"]["state"] = False
  
     def showMenu(self):
-        print("reload")
         x = 50
         y = 50
         s = 400
@@ -384,6 +414,7 @@ class App(object):
         self.menu["start"] = self.round_rect(90, 370, 410, 425, fill="green", outline = "black")
 
     def menuClick(self, event):
+        print("here")
         this = self.canvas.find_withtag(tk.CURRENT)
         if this:
             # handle number button clicks
@@ -425,8 +456,10 @@ class App(object):
                 print("changed to imgs")
                 return
             if this[0] == self.menu["start"]:
+                print("starting")
                 self.onMenu = False
                 self.textures = self.loadTextures(self.imagePath)
+                self.startGame()
                 return
             self.showMenu()
 

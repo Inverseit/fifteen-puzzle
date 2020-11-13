@@ -81,6 +81,8 @@ class GameLogic():
         new = self.addTuples(self.empty, vector[direction])
         if 0 <= new[0] < self.n and 0 <= new[1] < self.n:
             self.swap(*self.empty, *new)
+            return True
+        return False
     
     def reInit(self):
         self.board = self.getInitBoard()
@@ -89,18 +91,18 @@ class GameLogic():
     def moveByBlock(self,x, y):
         if (x > 0 and self.empty == (x - 1,y)):
             self.swap(x - 1, y, x, y)
-            print("goes to", x-1, y)
+            return True
         elif (y < self.n-1 and self.empty == (x,y + 1)):
             self.swap(x, y + 1, x, y)
-            print("goes to", x, y+1)
+            return True
         elif (x < self.n-1 and self.empty == (x + 1,y)):
             self.swap(x + 1, y, x, y)
-            print("goes to", x + 1, y)
+            return True
         elif (y > 0 and self.empty == (x, y - 1)):
             self.swap(x, y - 1, x, y)
-            print("goes to", x, y-1)
+            return True
         else:
-            print("Error")
+            return False
     # Swaps the value of two cells
     def swap(self, x1, y1, x2, y2):
         self.board[x1][y1] = self.board[x2][y2]
