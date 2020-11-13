@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.filedialog
 import time
 import math
 import copy
@@ -11,30 +12,32 @@ from tile import Tile
 
 NUMBERS  = 1
 
-
-
 class App(object):
     def __init__(self, master, **kwargs):
         self.master = master
         self.type = NUMBERS
         self.w = 500
-        self.h =  self.w+100
+        self.h = self.w+100
         self.canvas = tk.Canvas(self.master, width=self.w, height=self.h)
+        self.n = 4
+
         self.icons = {}
         self.openImages()
         self.setImages()
-        self.on = False
+        self.imagePath = "textures/tartan.jpg"
+        # self.on = False
         self.canvas.bind("<Motion>", self.moved)
         self.canvas.pack()
         # self.setButton()
-        self.n = 3
         self.model = GameLogic(self.n)
         self.size = self.w // self.n
         self.seed = []
         self.gameOver = False
-        self.textures = self.loadTextures("textures/tartan.jpg")
         self.bind()  # bind mouse and keys to the tkinter
         self.master.after(0, self.draw)
+        self.onMenu = True
+        self.setUpMenu()
+        self.showMenu()
         self.onShuflle = True
         self.shuffleBoard()
 
@@ -49,14 +52,6 @@ class App(object):
             self.icons[iconName]["off"] = ImageTk.PhotoImage(
                 self.reduce_opacity(icon, 0.5))
             self.icons[iconName]["state"] = False
-        # bot = Image.open("textures/icons/bot2.png")
-        # self.icons["bot"]["on"] = ImageTk.PhotoImage(bot)
-        # pause = Image.open("textures/icons/pause.png")
-        # self.icons["pause"]["on"] = ImageTk.PhotoImage(pause)
-        # play = Image.open("textures/icons/play.png")
-        # self.icons["play"]["on"] = ImageTk.PhotoImage(play)
-        # restart = Image.open("textures/icons/restart.png")
-        # self.icons["restart"]["on"] = ImageTk.PhotoImage(restart)
 
     def setBG(self):
         self.canvas.create_image(0, 0, image=self.bg, anchor='nw')
@@ -152,11 +147,13 @@ class App(object):
             return
         self.model.moveDirection(seed[0])
         seed = seed[1:]
-        self.master.after(50, lambda s =seed:self.shuffleAnimaion(s))
+        self.master.after(50, lambda seed=seed:self.shuffleAnimaion(seed))
 
     def draw(self):
         if self.gameOver:
             print("no need to continue")
+        elif self.onMenu:
+            pass
         else:
             self.tiles = self.getTiles(self.n)
             self.drawTiles()
@@ -190,8 +187,12 @@ class App(object):
         self.master.after(0, self.draw)
 
     def mouse(self, event):
-        this = self.canvas.find_withtag(tk.CURRENT)
-        if this:
+        # Mouse click handler general
+        if self.onMenu:
+            self.menuClick(event)
+            return
+        else:
+            this = self.canvas.find_withtag(tk.CURRENT)
             foundButton = [name for name in self.iconList if self.icons[name]
                     ["tag"] == this[0]]
             if foundButton:
@@ -228,6 +229,7 @@ class App(object):
                 tile.display()
 
     def moved(self,event):
+        # Event hover handler on mouse move
         this = self.canvas.find_withtag(tk.CURRENT)
         if this:
             found = [name for name in self.iconList if self.icons[name]["tag"] == this[0]]
@@ -240,7 +242,7 @@ class App(object):
                 for name in self.iconList:
                     if self.icons[name]["state"]:
                         self.canvas.itemconfig(self.icons[name]["tag"], image=self.icons[name]["off"])
-                        self.on = False
+            # add here main menu icon handler
 
     def buttonClick(self, name):
         if name == "restart":
@@ -252,12 +254,194 @@ class App(object):
         if name == "bot":
             s = Solver(self.model, self.n)
             self.loading = True
-            solution = s.getSolution()
+            solution, time = s.getSolution()
             self.loading = False
+            print(time)
             self.shuffleAnimaion(solution)
+        if name == "home":
+            self.onMenu = True
+            self.showMenu()
+        if name == "pause":
+            pass
 
+    # from https://stackoverflow.com/questions/44099594/how-to-make-a-tkinter-canvas-rectangle-with-rounded-corners
+    def round_rect(self, x1, y1, x2, y2, fill = "red", radius=25, **kw):
+        points = [x1+radius, y1,
+                  x1+radius, y1,
+                  x2-radius, y1,
+                  x2-radius, y1,
+                  x2, y1,
+                  x2, y1+radius,
+                  x2, y1+radius,
+                  x2, y2-radius,
+                  x2, y2-radius,
+                  x2, y2,
+                  x2-radius, y2,
+                  x2-radius, y2,
+                  x1+radius, y2,
+                  x1+radius, y2,
+                  x1, y2,
+                  x1, y2-radius,
+                  x1, y2-radius,
+                  x1, y1+radius,
+                  x1, y1+radius,
+                  x1, y1]
+        return self.canvas.create_polygon(points, fill=fill, width=2, smooth=True, **kw)
+
+    def setUpMenu(self):
+        self.menu = {}
+        self.menu["3"] = {}
+        self.menu["3"]["state"] = False
+        self.menu["3"]["val"] = 3
+        self.menu["4"] = {}
+        self.menu["4"]["state"] = True
+        self.menu["4"]["val"] = 4
+        self.menu["5"] = {}
+        self.menu["5"]["state"] = False
+        self.menu["5"]["val"] = 5
+        self.menu["num"] = {}
+        self.menu["img"] = {}
+        self.menu["num"]["state"] = True
+        self.menu["img"]["state"] = False
+ 
+    def showMenu(self):
+        print("reload")
+        x = 50
+        y = 50
+        s = 400
+        self.menu["bg"] = self.round_rect(x, y, x+s, y+s)
+        self.canvas.create_text(250, y+40, text="Choose the size of the board", font="Helvetica 16")
+        x = 50
+        y = y+70
+        size = 90
+        padding = 50
+        margin = (s - 3*size - 2*padding) // 2 
+        font = "Helvetica 40 bold"
         
+        x0, y0 = x+padding, y
+        cur = self.menu["3"]
+        cur["tags"] = {}
+        cur["tags"]["bg"]  = self.round_rect(x0,y0 , x0+size, y0+size, fill="blue")
+        cur["tags"]["txt"] = self.canvas.create_text(x0+ size//2, y0+size//2, text="3", font=font)
 
+        if cur["state"]:
+            self.canvas.itemconfig(cur["tags"]["bg"], outline = "black")
+            self.canvas.itemconfig(cur["tags"]["txt"], fill = "gold")
+        
+        x0, y0 = x+padding+margin+size, y
+        cur = self.menu["4"]
+        cur["tags"] = {}
+        cur["tags"]["bg"] = self.round_rect(
+            x0, y0, x0+size, y0+size, fill="blue")
+        cur["tags"]["txt"] = self.canvas.create_text(
+            x0 + size//2, y0+size//2, text="4", font=font)
+
+        if cur["state"]:
+            self.canvas.itemconfig(cur["tags"]["bg"], outline="black")
+            self.canvas.itemconfig(cur["tags"]["txt"], fill="gold")
+
+        x0, y0 = x+padding + 2*(margin+size), y
+        cur = self.menu["5"]
+        cur["tags"] = {}
+        cur["tags"]["bg"] = self.round_rect(
+            x0, y0, x0+size, y0+size, fill="blue")
+        cur["tags"]["txt"] = self.canvas.create_text(
+            x0 + size//2, y0+size//2, text="5", font=font)
+
+        if cur["state"]:
+            # if this button activated change it's style
+            self.canvas.itemconfig(cur["tags"]["bg"], outline="black")
+            self.canvas.itemconfig(cur["tags"]["txt"], fill="gold")
+
+
+        y = y +size+padding
+        self.canvas.create_text(
+            250, y-20, text="Choose the regime of the game", font="Helvetica 16")
+        
+        size = 130
+        margin = s - 2*size - 2*padding
+
+        x0, y0 = x+padding, y
+        font = "Helvetica 16 bold"
+        cur = self.menu["num"]
+        cur["tags"] = {}
+        cur["tags"]["bg"]  = self.round_rect(x0,y0 , x0+size, y0+size//2, fill="blue")
+        cur["tags"]["txt"] = self.canvas.create_text(x0+ size//2, y0+size//4, text="Classic", font=font)
+        
+        if cur["state"]:
+            self.canvas.itemconfig(cur["tags"]["bg"], outline="black")
+            self.canvas.itemconfig(cur["tags"]["txt"], fill="gold")
+        x0, y0 = x+padding+margin+size, y
+        cur = self.menu["img"]
+        cur["tags"] = {}
+        cur["tags"]["bg"]  =  self.round_rect(x0,y0 , x0+size, y0+size//2, fill="blue")
+        cur["tags"]["txt"] =  self.canvas.create_text(x0+ size//2, y0+size//4, text="Image", font=font, fill= "white")
+
+        if cur["state"]:
+            self.canvas.itemconfig(cur["tags"]["bg"], outline="black")
+            self.canvas.itemconfig(cur["tags"]["txt"], fill="gold")
+        
+        self.menu["start"] = self.round_rect(90, 370, 410, 425, fill="green", outline = "black")
+
+    def menuClick(self, event):
+        this = self.canvas.find_withtag(tk.CURRENT)
+        if this:
+            # handle number button clicks
+            if this[0] in self.menu["3"]["tags"].values():
+                self.menu["3"]["state"] = True
+                self.menu["4"]["state"] = False
+                self.menu["5"]["state"] = False
+                print("changed")
+                self.n = self.menu["3"]["val"]
+                print(self.n)
+            if this[0] in self.menu["4"]["tags"].values():
+                self.menu["4"]["state"] = True
+                self.menu["3"]["state"] = False
+                self.menu["5"]["state"] = False
+                print("changed")
+                self.n = self.menu["4"]["val"]
+                print(self.n)
+            if this[0] in self.menu["5"]["tags"].values():
+                self.menu["5"]["state"] = True
+                self.menu["4"]["state"] = False
+                self.menu["3"]["state"] = False
+                print("changed")
+                self.n = self.menu["5"]["val"]
+                print(self.n)
+            # handle game type
+            print("here")
+            if this[0] in self.menu["num"]["tags"].values():
+                print("num")
+                self.type = NUMBERS
+                self.menu["num"]["state"] = True
+                self.menu["img"]["state"] = False
+                print("changed to numbers")
+                return
+            if this[0] in self.menu["img"]["tags"].values():
+                self.type = NUMBERS+1
+                self.menu["num"]["state"] = False
+                self.menu["img"]["state"] = True
+                self.getImagePath()
+                print("changed to imgs")
+                return
+            if this[0] == self.menu["start"]:
+                self.onMenu = False
+                self.textures = self.loadTextures(self.imagePath)
+                return
+            self.showMenu()
+
+    def getImagePath(self):
+        f = tkinter.filedialog.askopenfilename(
+            parent=self.master, initialdir='C:/Users/User/Desktop/FALL 2020/15112/fifteen-puzzle>',
+            title='Choose file',
+            filetypes=[('png images', '.png'),
+                    ('gif images', '.gif')]
+        )
+        if f:
+            self.imagePath = f
+            print(self.imagePath)
+        else:
+            print("You didn't choose the image.")
 
 root = tk.Tk()
 app = App(root)
