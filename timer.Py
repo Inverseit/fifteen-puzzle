@@ -13,9 +13,7 @@ class Timer(object):
         self.draw()
     def draw(self):
         if not self.stoped:
-            print("going")
-            if self.tag:
-                self.canvas.delete(self.tag)
+            self.delete()
             self.passed = round(time.time() - self.start + self.total,3)
             self.s = self.getString()
             self.tag = self.canvas.create_text(350, 350, text=self.s, font = "Helvetica 16")
@@ -23,7 +21,9 @@ class Timer(object):
     def getString(self):
         t = self.passed
         return t
-    
+    def delete(self):
+        if self.tag:
+            self.canvas.delete(self.tag)
     def resume(self):
         self.stoped = False
         self.total += self.passed

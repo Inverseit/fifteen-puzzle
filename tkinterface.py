@@ -20,19 +20,19 @@ class App(object):
         self.n = 4
         self.w = 500
         self.h = self.w+100
-        self.size = self.w // self.n
         self.canvas = tk.Canvas(self.master, width=self.w, height=self.h)
+        self.loadSources()
         self.imagePath = "textures/tartan.jpg"
         # self.on = False
         self.canvas.bind("<Motion>", self.moved)
         self.canvas.pack()
         # self.setButton()
         
-        self.loadSources()
         
         # bind mouse and keys to the tkinter
         self.bind()
         self.started = False
+        self.onPauseMenu = False
         self.onMenu = True
         self.setUpMenu()
         self.showMenu()
@@ -56,7 +56,9 @@ class App(object):
     def openImages(self):
         im = Image.open("textures/bg/gyr.jpg")
         self.bg = ImageTk.PhotoImage(im)
-        self.iconList = ["home", "pause", "restart", "bot"]
+        bgPause = Image.open("textures/bg/pause.png").convert("RGBA")
+        self.bgPause = ImageTk.PhotoImage(self.reduce_opacity(bgPause, 0.96))
+        self.iconList = ["home", "pause", "restart", "bot", "play"]
         for iconName in self.iconList:
             icon = Image.open("textures/icons/"+iconName+".png").convert("RGBA")
             self.icons[iconName] = {}
@@ -64,6 +66,8 @@ class App(object):
             self.icons[iconName]["off"] = ImageTk.PhotoImage(
                 self.reduce_opacity(icon, 0.5))
             self.icons[iconName]["state"] = False
+        # separate play from the basic list
+        # self.iconList = self.iconList[:-1]
 
     def setBG(self):
         self.canvas.create_image(0, 0, image=self.bg, anchor='nw')
@@ -79,6 +83,7 @@ class App(object):
             begin + 2*margin, height, image=self.icons["pause"]["off"], anchor="nw")
         self.icons["bot"]["tag"] = self.canvas.create_image(
             begin+3*margin, height, image=self.icons["bot"]["off"], anchor="nw")
+        self.icons["play"]["tag"] = 0 
 
 
 
@@ -279,7 +284,10 @@ class App(object):
             self.model.reInit()
             self.gameOver = False
             self.onPause = True
-            self.shuffleBoard()
+            # self.shuffleBoard()
+            self.t.stop()
+            self.t.delete()
+            self.startGame()
             return
         if name == "bot":
             s = Solver(self.model, self.n)
@@ -292,8 +300,14 @@ class App(object):
             self.onMenu = True
             self.showMenu()
         if name == "pause":
-            self.onPause = True
+            self.onPauseMenu = True
+            self.showPause()
             self.t.stop()
+        if name == "play":
+            self.onPauseMenu = False
+            self.draw()
+            self.t.resume()
+            
 
     # from https://stackoverflow.com/questions/44099594/how-to-make-a-tkinter-canvas-rectangle-with-rounded-corners
     def round_rect(self, x1, y1, x2, y2, fill = "red", radius=25, **kw):
@@ -458,6 +472,7 @@ class App(object):
             if this[0] == self.menu["start"]:
                 print("starting")
                 self.onMenu = False
+                self.size = self.w // self.n
                 self.textures = self.loadTextures(self.imagePath)
                 self.startGame()
                 return
@@ -475,6 +490,17 @@ class App(object):
             print(self.imagePath)
         else:
             print("You didn't choose the image.")
+
+    def showPause(self):
+        x = 100
+        y = 100
+        s = 400
+
+        self.menu["bg"] = self.canvas.create_image(
+            x, y, image=self.bgPause, anchor='nw')
+
+        self.icons["play"]["tag"] = self.canvas.create_image( x+100, y+100, image=self.icons["play"]["off"], anchor="nw")
+
 
 root = tk.Tk()
 app = App(root)
