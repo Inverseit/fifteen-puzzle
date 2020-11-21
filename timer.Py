@@ -3,34 +3,44 @@ class Timer(object):
     def __init__(self, master, canvas):
         self.master = master
         self.canvas = canvas
-        self.total = 0
-        self.stoped = False
+        self.total = 0     # total passed since start
+        self.passed = 0    # passed after past resume or start
         self.tag = ""
-        print("started")
+        self.running = False   # is started
+        self.stoped = False    # is paused
     def run(self):
-        print("here")
+        print("started running")
+        self.running = True
         self.start = time.time()
         self.draw()
+
     def draw(self):
         if not self.stoped:
             self.delete()
-            self.passed = round(time.time() - self.start + self.total,3)
-            self.s = self.getString()
-            self.tag = self.canvas.create_text(350, 350, text=self.s, font = "Helvetica 16")
+            self.passed = round(time.time() - self.start,3)
+            self.tag = self.canvas.create_text(
+                350, 350, text=self.getTime(), font="Helvetica 16")
             self.master.after(5, self.draw)
-    def getString(self):
-        t = self.passed
-        return t
+
+    def getTime(self):
+        t = self.total + self.passed
+        return round(t, 3)
+    def getTotal(self):
+        return self.total
+
     def delete(self):
         if self.tag:
             self.canvas.delete(self.tag)
+
     def resume(self):
         self.stoped = False
-        self.total += self.passed
+        if not self.running:
+            return
         self.start = time.time()
         self.draw() 
 
     def stop(self):
         self.stoped = True
+        self.total += self.passed
     
 
