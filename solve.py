@@ -90,6 +90,7 @@ class Positions(object):
 
 class Solver():
     def __init__(self, g, n):
+        print("start doing")
         self.n = n
         self.start = time.time()
         self.g = g
@@ -112,7 +113,7 @@ class Solver():
         i = 0
         while not self.queue.empty():
             pos = self.queue.get()
-
+            print(pos)
             if pos.level > 70:
                 solution = "No under 70"
                 break
