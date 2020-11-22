@@ -51,6 +51,8 @@ class Icon():
 
     def turnOff(self):
         self.state = False
+    def turnOn(self):
+        self.state = True
     def getState(self):
         return self.state
     def getVal(self):
