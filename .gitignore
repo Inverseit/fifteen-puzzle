@@ -29,10 +29,6 @@ MANIFEST
 tmp
 tmp/
 temp/
-menu.py
-chat/
-chat.py
-hw8.py
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -134,8 +130,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .vscode/settings.json
-solver.py
-t.html
-textures/gray.jpg
-D2.md
-D2.pdf
+hw8.py
