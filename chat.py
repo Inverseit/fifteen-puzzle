@@ -1,3 +1,4 @@
+# TO BE DELETED FROM THE PROJECT
 #    15-112: Principles of Programming and Computer Science
 #    HW07 Programming: Implementing a Chat Client
 #    Name      : Ulan Seitkaliyev

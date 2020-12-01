@@ -1,28 +1,9 @@
-# by Ulan Seitkaliyev
-# useitkal
-
+# Implements the online version of the Fifteen Game
 from tkinter import *
 from tkinter import messagebox
-
-from testToplevel import *
-
-# The following line is up to a tester
-
-# from useitkalhw7 import *
+from onlineGameInterface import *
 from chat import *
-# from __ import *
-
-ONLINE_CHAR = "N"
-OFFLINE_CHAR = "F"
-REQUEST_CHAR = "R"
-WIN = "W"
-MOVE = "M"
-
-BUSY = "h/busy.ula"
-PLAY = "h/play.ula"
-ACC = "h/accept.ula"
-REJ = "h/reject.ula"
-
+from config import *
 
 class LoginScreen():
     # Class implements the login window of GUI

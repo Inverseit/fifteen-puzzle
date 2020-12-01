@@ -1,3 +1,4 @@
+# Provides the main offline game
 # import python libs
 import tkinter as tk
 from tkinter import messagebox

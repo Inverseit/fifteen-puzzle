@@ -1,3 +1,4 @@
+# Provides the Solver to the fifteen game using A* algorithm
 import time
 from queue import PriorityQueue
 from copy import deepcopy

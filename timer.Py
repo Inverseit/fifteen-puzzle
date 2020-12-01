@@ -1,3 +1,4 @@
+# provides timer for the application
 import time
 class Timer(object):
     def __init__(self, master, canvas):
