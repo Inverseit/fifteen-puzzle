@@ -1,20 +1,18 @@
 
 from tkinter import messagebox
 import random
-from icons import Icon
 import tkinter as tk
-import tkinter.filedialog
 import time
 import math
 import copy
-import os
 from PIL import ImageTk, Image, ImageEnhance
+
 from gamelogic import GameLogic
 from timer import Timer
 from solve import Solver
 from tile import Tile
 
-
+# Provides online App class limited ofline app with multiplayer support
 class App(tk.Toplevel):
     def __init__(self, master, seed, friend, comm):
         super().__init__(master)
@@ -68,9 +66,6 @@ class App(tk.Toplevel):
                 piece = im.crop(box)
                 img = Image.new('RGB', (125, 125), 255)
                 img.paste(piece)
-                # path = os.path.join('tmp/IMG-%s.jpg' % k)
-                # k += 1
-                # img.save(path)
                 cropped.append(img)
         return cropped
 
@@ -118,7 +113,6 @@ class App(tk.Toplevel):
         if self.gameOver:
             self.timeFinished = round(self.t.getTotal(), 2)
             self.comm.sendMessage(self.friend, "W"+str(self.timeFinished))
-            self.done()  # should be you won or sth
             tk.messagebox.showinfo(message="CONGRATSSSSSSS")
             self.destroy()
 

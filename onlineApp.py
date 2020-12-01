@@ -15,6 +15,8 @@ from chat import *
 ONLINE_CHAR = "N"
 OFFLINE_CHAR = "F"
 REQUEST_CHAR = "R"
+WIN = "W"
+MOVE = "M"
 
 BUSY = "h/busy.ula"
 PLAY = "h/play.ula"
@@ -97,9 +99,14 @@ class HomeWindow(Toplevel):
         self.display()
         # self.activeChats = {}  # dictionary that stores active chat windows
         self.playing = False
+        self.moves = 0
         self.waiting = False
         self.loop = 0
         self.routine()  # runs routine services (checking new messages) and updating screens
+
+        # self.playingFriend  = "user"
+        # self.playing = True
+        # self.startGame("user")
 
     def display(self):
         # Display the window and its widgets (elements)
@@ -233,8 +240,37 @@ class HomeWindow(Toplevel):
 
     ## ROUTINE TASKS
 
+    def manageGame(self):
+        if not self.app.gameOver:
+            self.comm.sendMessage(self.playingFriend,
+                                  "M" + str(self.app.getMoves()))
+            msgBox, fileBox = self.comm.getMail()
+            if msgBox:
+                for freind, content in msgBox:
+                    print(content)
+                    if content[0] == MOVE:
+                        self.moves = content[1:]
+                    if content[0] == WIN:
+                        print("You lost", content[1:])
+                        tk.messagebox.showwarning(
+                            title="You lost", message="Your opponent finished the game " + content[1:] + " seconds")
+                        self.playing = False
+                        self.playingFriend = ""
+                        self.app.destroy()
+                        return
+            self.master.after(500, self.manageGame)
+        else:
+            print("You won!")
+            print("Stop everything")
+            self.playing = False
+            self.playingFriend = ""
+            return
+
     def recieveMessages(self):
         # Recieves the responses from the server
+        if self.playing:
+            return
+        print('recieving')
         msgBox, fileBox = self.comm.getMail()
         if msgBox:
             # for every message open chats and append messages
@@ -284,24 +320,22 @@ class HomeWindow(Toplevel):
                     self.startGame(friend)
 
     def updateStat(self):
-        # print("update")
         if self.playing:
-            # print("setting a new")
-            s = self.playingFriend + " is moved " + str(random.randint(0, 20)) + " moves"
+            s = str(self.moves)
             self.app.setFriendStat(s)
-        self.master.after(500, self.updateStat)
+            self.master.after(500, self.updateStat)
+        return
 
     def startGame(self, f):
         print("play!!!!!!")
         # launches a game with friend f
         seed = "DDULDRUUDLLRLDDDLLURDDLURDLDURLDUDLRUD"
         self.app = App(self.master, seed, f, self.comm)
-        print("launched")
         self.updateStat()
+        self.manageGame()
 
     def routine(self):
         # Routine tasks that will run peridically
-        print(self.loop)
         # update lists only 15 seconds once
         if self.loop % 15 == 0:
             self.updateLists()
