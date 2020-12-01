@@ -1,4 +1,4 @@
-# TO BE DELETED FROM THE PROJECT
+# TO BE DELETED FROM THE PROJECT since it is a HW
 #    15-112: Principles of Programming and Computer Science
 #    HW07 Programming: Implementing a Chat Client
 #    Name      : Ulan Seitkaliyev
@@ -210,10 +210,7 @@ class chatComm:
         return res.startswith("@ok")
 
     def sendFile(self, friend, filename):
-    	# sends file
-        # open and read whole file
-        with open(filename, 'r') as fd:
-            content = fd.read()
+        content = "Ula"
         preMsg = "@sendfile@" + friend + "@"+filename+"@" + content
         req = self.prependSize(preMsg)
         res = self.makeRequest(req)
@@ -227,12 +224,6 @@ class chatComm:
         # resList is ["n", "u1", "f2", ... "un"]
         reqs = resList[2:]
         return reqs
-
-    def saveFile(self, filename, content):
-    	# saves files with given content
-        with open(filename, 'w') as fd:
-            fd.write(content)
-        return
 
     def getMail(self):
     	# recieve the whole mail
@@ -259,7 +250,6 @@ class chatComm:
                 splited = remainingStr.split('@', 4)
                 msgType, username, filename, content = splited[:4]
                 fileBox.append((username, filename))
-                self.saveFile(filename, content)
                 if len(splited) > 4:
                     remainingStr = splited[4]
         return [msgBox, fileBox]
